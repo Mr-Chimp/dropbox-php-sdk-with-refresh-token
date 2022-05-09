@@ -68,7 +68,7 @@ class OAuth2Client
      */
     protected function buildUrl($endpoint = '', array $params = [])
     {
-        $queryParams = http_build_query($params, '', '&');
+        $queryParams = http_build_query($params);
         return static::BASE_URL . $endpoint . '?' . $queryParams;
     }
 
@@ -125,25 +125,36 @@ class OAuth2Client
     /**
      * Get Access Token
      *
-     * @param  string $code Authorization Code
+     * @param  string $code        Authorization Code
      * @param  string $redirectUri Redirect URI used while getAuthorizationUrl
-     * @param  string $grant_type Grant Type ['authorization_code']
+     * @param  string $grant_type  Grant Type ['authorization_code']
      *
      * @return array
-     * @throws \Kunnu\Dropbox\Exceptions\DropboxClientException
      */
     public function getAccessToken($code, $redirectUri = null, $grant_type = 'authorization_code')
     {
-        //Request Params
-        $params = [
-        'code' => $code,
-        'grant_type' => $grant_type,
-        'client_id' => $this->getApp()->getClientId(),
-        'client_secret' => $this->getApp()->getClientSecret(),
-        'redirect_uri' => $redirectUri
-        ];
+        if ($grant_type == 'refresh_token') {
+            //Request Params
+            $params = [
+                'grant_type' => $grant_type,
+                'refresh_token' => $code,
+                'client_id' => $this->getApp()->getClientId(),
+                'client_secret' => $this->getApp()->getClientSecret()
+            ];
+        }
+        else
+        {
+            //Request Params
+            $params = [
+                'code' => $code,
+                'grant_type' => $grant_type,
+                'client_id' => $this->getApp()->getClientId(),
+                'client_secret' => $this->getApp()->getClientSecret(),
+                'redirect_uri' => $redirectUri
+            ];
+        }
 
-        $params = http_build_query($params, '', '&');
+        $params = http_build_query($params);
 
         $apiUrl = static::AUTH_TOKEN_URL;
         $uri = $apiUrl . "?" . $params;
@@ -166,7 +177,6 @@ class OAuth2Client
      * Disables the access token
      *
      * @return void
-     * @throws \Kunnu\Dropbox\Exceptions\DropboxClientException
      */
     public function revokeAccessToken()
     {
